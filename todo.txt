@@ -1,0 +1,8 @@
+TO DO
+ [X] Kill car is fitness hasn't improved in x frames
+ [X] Connect brain/network up to car controls
+ [X] Connect train.py up to environment and brain
+      ---> Brain receives weights from train.py
+      ---> Brain receives sensor information from environment
+      ---> environment uses train.py to create weights for new generation
+      ---> train.py receives fitness from environment
