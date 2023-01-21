@@ -1,23 +1,20 @@
-import pygame
-import sys
-import random
-import math
+import pygame, sys
+import random, math
 import numpy as np
-from pygame.locals import *
+from pygame.locals import*
 import network
-# Code to rotate image inspired by https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
-
+#Code to rotate image inspired by https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
 
 def simulate(candidates):
     pygame.init()
-    w, h = 640, 360
-    screen = pygame.display.set_mode((w, h))
+    w,h = 640, 360
+    screen = pygame.display.set_mode((w,h))
     pygame.display.set_caption("environment.py")
-    track_img = pygame.image.load("track.png").convert_alpha()
+    track_img = pygame.image.load("test_track.png").convert_alpha()
     car_img = pygame.image.load("car.png")
     activecar_img = pygame.image.load("activecar.png")
     inactivecar_img = pygame.image.load("inactivecar.png")
-    # track = pygame.Surface((1952, 1824), pygame.SRCALPHA)
+    #track = pygame.Surface((1952, 1824), pygame.SRCALPHA)
 
     class Car():
         def __init__(self, position, weights, bias):
@@ -27,11 +24,10 @@ def simulate(candidates):
             self.bias = bias
             self.network = network.Network(self.weights, self.bias)
 
-            self.image = pygame.Surface((15, 30), pygame.SRCALPHA)
-            self.image.blit(car_img, (0, 0))
+            self.image = pygame.Surface((15,30), pygame.SRCALPHA)
+            self.image.blit(car_img,(0,0))
             self.original_image = self.image
-            self.rect = self.image.get_rect(
-                center=(self.posX-cameraX, self.posY-cameraY))
+            self.rect = self.image.get_rect(center=(self.posX-cameraX, self.posY-cameraY))
 
             self.angle = 0
             self.leftsensor_angle = math.pi/4
@@ -51,7 +47,7 @@ def simulate(candidates):
             self.fitness = 1
             self.best_prev_fitness = -1
 
-            self.last_colour = (88, 232, 88, 255)
+            self.last_colour = (88,232,88,255)
 
         def move(self):
             if not self.freeze:
@@ -61,45 +57,38 @@ def simulate(candidates):
         def rotate(self, direction, angle):
             if not self.freeze:
                 if direction == "left":
-                    self.angle += angle  # math.pi/10#/45
-                    self.leftsensor_angle += angle  # math.pi/10#/45
-                    self.rightsensor_angle += angle  # math.pi/10#/45 #pi/360
+                    self.angle += angle#math.pi/10#/45
+                    self.leftsensor_angle += angle#math.pi/10#/45
+                    self.rightsensor_angle += angle#math.pi/10#/45 #pi/360
                 elif direction == "right":
-                    self.angle -= angle  # math.pi/10#/45
-                    self.leftsensor_angle -= angle  # math.pi/10#/45
-                    self.rightsensor_angle -= angle  # math.pi/10#/45
+                    self.angle -= angle#math.pi/10#/45
+                    self.leftsensor_angle -= angle#math.pi/10#/45
+                    self.rightsensor_angle -= angle#math.pi/10#/45
                 self.angle %= 2*math.pi
                 self.leftsensor_angle %= 2*math.pi
                 self.rightsensor_angle %= 2*math.pi
-                self.image = pygame.transform.rotate(
-                    self.original_image, math.degrees(self.angle))  # , 1)
-                # center=self.rect.center)
-                self.rect = self.image.get_rect(center=(self.posX, self.posY))
+                self.image = pygame.transform.rotate(self.original_image, math.degrees(self.angle))#, 1)
+                self.rect = self.image.get_rect(center=(self.posX, self.posY))#center=self.rect.center)
 
         def kill(self):
             self.freeze = True
-            self.image = pygame.transform.rotate(
-                self.original_image, math.degrees(0))
-            self.image.blit(inactivecar_img, (0, 0))
+            self.image = pygame.transform.rotate(self.original_image, math.degrees(0))
+            self.image.blit(inactivecar_img,(0,0))
             self.original_image = self.image
-            self.image = pygame.transform.rotate(
-                self.original_image, math.degrees(self.angle))
+            self.image = pygame.transform.rotate(self.original_image, math.degrees(self.angle))
 
         def draw(self):
             screen.blit(self.image, (self.posX-cameraX, self.posY-cameraY))
 
         def update_fitness(self):
             if not self.freeze:
-                # [(253,240,240,255), (241,253,241,255), (254,253,241,255)]
-                colours = [(254, 246, 246, 255), (247, 253,
-                                                  247, 255), (253, 253, 246, 255)]
+                colours = [(0,0,255,255), (255, 0, 0, 255), (0, 255, 0, 255)]#[(253,240,240,255), (241,253,241,255), (254,253,241,255)]
                 for i in range(30):
                     for j in range(30):
                         try:
-                            if self.image.get_at((i, j)) in [(237, 28, 36, 255), (34, 177, 76, 255)]:
-                                colour = track_img.get_at(
-                                    (int(self.posX+i), int(self.posY+j)))
-                                if colour in colours:  # change
+                            if self.image.get_at((i,j)) in [(237, 28, 36, 255), (34, 177, 76, 255)]:
+                                colour = track_img.get_at((int(self.posX+i), int(self.posY+j)))
+                                if colour in colours: #change
                                     if colour != self.last_colour:
                                         if self.last_colour == colours[0] and colour == colours[1]:
                                             self.fitness += 1
@@ -120,28 +109,28 @@ def simulate(candidates):
         def draw_sensors(self):
             if not self.freeze:
                 sensors = {
-                    "left_sensor": {"front": None, "back": None, "colour": (38, 173, 20, 255), "angle": self.leftsensor_angle},
-                    "front_sensor": {"front": None, "back": None, "colour": (0, 104, 196, 255), "angle": self.angle},
-                    "right_sensor": {"front": None, "back": None, "colour": (196, 177, 23, 255), "angle": self.rightsensor_angle}
+                    "left_sensor": {"front":None, "back":None, "colour": (38, 173, 20, 255), "angle": self.leftsensor_angle},
+                    "front_sensor": {"front":None, "back":None, "colour": (0, 104, 196, 255), "angle": self.angle},
+                    "right_sensor": {"front":None, "back":None, "colour": (196, 177, 23, 255), "angle": self.rightsensor_angle}
                 }
                 for i in range(30):
                     for j in range(30):
                         if (sensors["left_sensor"]["front"] and sensors["left_sensor"]["back"] and sensors["front_sensor"]["front"] and sensors["front_sensor"]["back"] and sensors["right_sensor"]["front"] and sensors["right_sensor"]["back"]):
                             break
                         try:
-                            colour = self.image.get_at((i, j))
+                            colour = self.image.get_at((i,j))
                             if colour == (38, 173, 20, 255):
-                                sensors["left_sensor"]["front"] = (i, j)
+                                sensors["left_sensor"]["front"] = (i,j)
                             elif colour == (52, 237, 28, 255):
-                                sensors["left_sensor"]["back"] = (i, j)
+                                sensors["left_sensor"]["back"] = (i,j)
                             elif colour == (0, 104, 196, 255):
-                                sensors["front_sensor"]["front"] = (i, j)
+                                sensors["front_sensor"]["front"] = (i,j)
                             elif colour == (0, 136, 255, 255):
-                                sensors["front_sensor"]["back"] = (i, j)
+                                sensors["front_sensor"]["back"] = (i,j)
                             elif colour == (196, 177, 23, 255):
-                                sensors["right_sensor"]["front"] = (i, j)
+                                sensors["right_sensor"]["front"] = (i,j)
                             elif colour == (237, 215, 28, 255):
-                                sensors["right_sensor"]["back"] = (i, j)
+                                sensors["right_sensor"]["back"] = (i,j)
                         except IndexError:
                             pass
                     if (sensors["left_sensor"]["front"] and sensors["left_sensor"]["back"] and sensors["front_sensor"]["front"] and sensors["front_sensor"]["back"] and sensors["right_sensor"]["front"] and sensors["right_sensor"]["back"]):
@@ -150,17 +139,14 @@ def simulate(candidates):
                     if (sensor["front"] and sensor["back"]):
                         i = 0
                         touchingWall = False
-                        current_pos = (
-                            self.posX+sensor["front"][0]-cameraX, self.posY+sensor["front"][1]-cameraY)
+                        current_pos = (self.posX+sensor["front"][0]-cameraX, self.posY+sensor["front"][1]-cameraY)
                         draw_coordinates = []
                         while (not touchingWall) and i < 100:
-                            i += 1
-                            current_pos = (
-                                current_pos[0]-(1*math.sin(sensor["angle"])), current_pos[1]-(math.cos(sensor["angle"])*1))
-                            int_current_pos = [
-                                int(round(current_pos[0]+cameraX)), int(round(current_pos[1]+cameraY))]
+                            i+=1
+                            current_pos = (current_pos[0]-(1*math.sin(sensor["angle"])), current_pos[1]-(math.cos(sensor["angle"])*1))
+                            int_current_pos = [int(round(current_pos[0]+cameraX)), int(round(current_pos[1]+cameraY))]
                             try:
-                                if track_img.get_at(int_current_pos) == (0, 0, 0, 255):
+                                if track_img.get_at(int_current_pos) == (0,0,0,255):
                                     touchingWall = True
                                 else:
                                     draw_coordinates.append(current_pos)
@@ -169,14 +155,13 @@ def simulate(candidates):
                         for pos in draw_coordinates:
                             screen.fill(sensor["colour"], (pos, (2, 2)))
                         self.sensors[key] = i
-
     def check_collision(car):
         if not car.freeze:
             for i in range(30):
                 for j in range(30):
                     try:
-                        if car.image.get_at((i, j)) in [(237, 28, 36, 255), (34, 177, 76, 255)]:
-                            if track_img.get_at((int(car.posX+i), int(car.posY+j))) == (0, 0, 0, 255):
+                        if car.image.get_at((i,j)) in [(237, 28, 36, 255), (34, 177, 76, 255)]:
+                            if track_img.get_at((int(car.posX+i), int(car.posY+j))) == (0,0,0,255):
                                 car.kill()
                                 break
                     except IndexError:
@@ -184,18 +169,18 @@ def simulate(candidates):
                 if car.freeze:
                     break
 
-    cameraX, cameraY = 0, 0
+    cameraX, cameraY = 0,0
 
     cars = []
     for car in candidates:
-        layers = [3, 4, 4, 2]
-        cars.append(Car([190, 920], car.weights, car.bias))  # 167,1410
+        layers = [3,4,4,2]
+        cars.append(Car([370,981], car.weights, car.bias)) #167,1410
 
     active_car = cars[0]
 
     clock = pygame.time.Clock()
     ticks = 0
-    while True:  # Main game loop
+    while True: #Main game loop
         ticks += 1
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -203,33 +188,28 @@ def simulate(candidates):
                 sys.exit()
 
         if not active_car.freeze:
-            active_car.image = pygame.transform.rotate(
-                active_car.original_image, math.degrees(0))
-            active_car.image.blit(car_img, (0, 0))
+            active_car.image = pygame.transform.rotate(active_car.original_image, math.degrees(0))
+            active_car.image.blit(car_img,(0,0))
             active_car.original_image = active_car.image
-            active_car.image = pygame.transform.rotate(
-                active_car.original_image, math.degrees(active_car.angle))
+            active_car.image = pygame.transform.rotate(active_car.original_image, math.degrees(active_car.angle))
         for car in cars:
             if (active_car.freeze and not car.freeze) or (car.fitness > active_car.fitness and not car.freeze):
                 active_car = car
         if not active_car.freeze:
-            active_car.image = pygame.transform.rotate(
-                active_car.original_image, math.degrees(0))
-            active_car.image.blit(activecar_img, (0, 0))
+            active_car.image = pygame.transform.rotate(active_car.original_image, math.degrees(0))
+            active_car.image.blit(activecar_img,(0,0))
             active_car.original_image = active_car.image
-            active_car.image = pygame.transform.rotate(
-                active_car.original_image, math.degrees(active_car.angle))
+            active_car.image = pygame.transform.rotate(active_car.original_image, math.degrees(active_car.angle))
 
-        for car in cars:  # Update velocity and rotation from feed-forward ouput
-            output = car.network.forward_propagate(np.asmatrix(
-                [car.velocity, car.sensors["left_sensor"], car.sensors["front_sensor"], car.sensors["right_sensor"]]).transpose())
-            car.velocity += float(output[0]*1 - .5)  # Y - 0.5
-            car.rotate("left", output[1]*.5*np.pi-.25*np.pi)  # .5 pi Y - .25
+        for car in cars: #Update velocity and rotation from feed-forward ouput
+            output = car.network.forward_propagate(np.asmatrix([car.velocity,car.sensors["left_sensor"],car.sensors["front_sensor"],car.sensors["right_sensor"]]).transpose())
+            car.velocity += float(output[0]*1 - .5) # Y - 0.5
+            car.rotate("left", output[1]*.5*np.pi-.25*np.pi) #.5 pi Y - .25
 
-        screen.fill((255, 255, 255))
+        screen.fill((255,255,255))
         cameraX = active_car.posX - 0.5*w
         cameraY = active_car.posY - 0.5*h
-        screen.blit(track_img, (0 - cameraX, 0 - cameraY))
+        screen.blit(track_img,(0 -cameraX,0 -cameraY))
         for car in cars:
             if not car.freeze:
                 if ticks % 150 == 0:
@@ -255,7 +235,6 @@ def simulate(candidates):
             else:
                 pygame.quit()
                 for car in cars:
-                    if car.fitness < 1:
-                        car.fitness = 1
-                    # print(car.fitness)
+                    if car.fitness < 1: car.fitness = 1
+                    print(car.fitness)
                 return cars

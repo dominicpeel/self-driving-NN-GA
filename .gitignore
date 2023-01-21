@@ -1,4 +1,6 @@
 __pycache__
 changelog.txt
-peachgardens.png
 sensors.py
+brains/*
+graphs/*
+todo.txt
